@@ -32,10 +32,9 @@ def _apply_text_filters(df: pd.DataFrame, q1: str, q2: str, q3: str) -> pd.DataF
 def render_orders() -> None:
     st.markdown("#### Orders")
     st.caption(
-        "Source: parsed from a **dirty** Excel export. "
-        "**Item description** is split into **Desc L1, L2, …** by newline so you can read it in columns. "
-        "Add the original **Item description** from *Visible columns* if you need the full block. "
-        "Heavier parsing (tolerance, isotope list) can build on this later."
+        "Source: parsed from a **dirty** Excel export. **Item description** is split into **Desc L1, L2, …** by line. "
+        "Structured fields are regex-pulled from the full text: **Isotopes** (e.g. Cd-109, Tc-99m), **Activity tolerance**, "
+        "**Overall dimensions**, **Active dimensions**, **Fill Volume**."
     )
 
     raw = st.session_state.get("raw_orders_df")

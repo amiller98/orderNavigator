@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pandas as pd
 
-from order_navigator.description_parse import add_description_line_columns
+from order_navigator.description_parse import (
+    add_description_line_columns,
+    add_structured_description_columns,
+)
 
 
 def filter_rows_requiring_leading_keys(df: pd.DataFrame, n: int = 3) -> pd.DataFrame:
@@ -40,4 +43,5 @@ def parse_orders_from_raw(raw: pd.DataFrame) -> pd.DataFrame:
         out = add_description_line_columns(
             out, source_col="Item description", prefix="Desc L", max_lines=12
         )
+        out = add_structured_description_columns(out, source_col="Item description")
     return out
