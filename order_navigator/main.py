@@ -55,7 +55,7 @@ def run() -> None:
         _SECTIONS,
         default=_SECTIONS[0],
         key="on_main_section",
-        label_visibility="visible",
+        label_visibility="hidden",
         width="stretch",
     )
     if not active:
