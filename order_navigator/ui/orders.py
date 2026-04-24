@@ -6,14 +6,33 @@ import pandas as pd
 import streamlit as st
 
 from order_navigator.parsing import parse_orders_from_raw
+from order_navigator.state import ORDERS_PARSE_VERSION
+
+# Default column order: keys + structured fields up front, then the rest.
+_COLUMN_ORDER_BUMP = [
+    "Customer name",
+    "Cust#",
+    "SO#",
+    "WO#",
+    "CC",
+    "Cost Obj",
+    "Item ID",
+    "Isotopes",
+    "Activity tolerance",
+    "Overall dimensions",
+    "Active dimensions",
+    "Fill Volume",
+]
 
 
 def _default_visible_columns(columns: list[str]) -> list[str]:
-    """Prefer split description lines over one tall `Item description` cell when both exist."""
+    """All columns except the raw multiline `Item description` if we have `Desc L*`; bump useful fields first."""
     cols = list(columns)
     if "Desc L1" in cols and "Item description" in cols:
-        return [c for c in cols if c != "Item description"]
-    return cols
+        cols = [c for c in cols if c != "Item description"]
+    first = [c for c in _COLUMN_ORDER_BUMP if c in cols]
+    rest = [c for c in cols if c not in first]
+    return first + rest
 
 
 def _apply_text_filters(df: pd.DataFrame, q1: str, q2: str, q3: str) -> pd.DataFrame:
@@ -42,6 +61,10 @@ def render_orders() -> None:
         st.info("Upload an Excel or CSV in the **sidebar** to load orders. Nothing to show yet.")
         return
 
+    if st.session_state.get("orders_parse_version") != ORDERS_PARSE_VERSION:
+        st.session_state["orders_parse_version"] = ORDERS_PARSE_VERSION
+        st.session_state["orders_parsed_df"] = None
+
     if st.session_state.get("orders_parsed_df") is None:
         st.session_state["orders_parsed_df"] = parse_orders_from_raw(raw)
     df = st.session_state["orders_parsed_df"]
@@ -49,21 +72,28 @@ def render_orders() -> None:
         st.warning("Parsed orders are empty after the (stub) parse step.")
         return
 
+    col_sig = "\x1e".join(map(str, df.columns))
+    if st.session_state.get("_on_orders_col_sig") != col_sig:
+        st.session_state["_on_orders_col_sig"] = col_sig
+        st.session_state["on_visible_multiselect"] = _default_visible_columns(list(df.columns))
+
     c1, c2, c3, c4 = st.columns([2, 2, 1, 1])
     with c1:
         show_cols = st.multiselect(
             "Visible columns",
             list(df.columns),
-            default=_default_visible_columns(list(df.columns)),
-            help="Desc L* = lines from Item description. Re-add Item description to see the raw multiline cell.",
+            key="on_visible_multiselect",
+            help="Streamlit may cache this list; it resets when the file / columns change. "
+            "Desc L* = lines from Item description. Re-add **Item description** to see the raw multiline cell.",
         )
     with c2:
         sort_col = st.selectbox("Sort by", list(df.columns), index=0)
     with c3:
         sort_asc = st.toggle("Ascending", value=True)
     with c4:
-        if st.button("Re-run parse (stub)"):
+        if st.button("Re-run parse"):
             st.session_state["orders_parsed_df"] = parse_orders_from_raw(raw)
+            st.session_state["_on_orders_col_sig"] = None
             st.rerun()
 
     if not show_cols:
