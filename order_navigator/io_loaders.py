@@ -8,23 +8,44 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-# Open Order / ERP-style exports: title in row 1, real headers in row 2 (Excel line 2 → pandas header=1).
-_EXCEL_HEADER_ROW = 1
+from order_navigator.header_detect import dataframe_with_detected_header, detect_header_row_index
+
+
+def _read_csv_all_rows_headerless(b: io.BytesIO) -> pd.DataFrame:
+    for enc in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            b.seek(0)
+            return pd.read_csv(
+                b,
+                header=None,
+                encoding=enc,
+                on_bad_lines="skip",
+            )
+        except (UnicodeDecodeError, pd.errors.EmptyDataError, UnicodeError):
+            continue
+    b.seek(0)
+    return pd.read_csv(
+        b,
+        header=None,
+        encoding="latin-1",
+        on_bad_lines="skip",
+    )
 
 
 def load_uploaded_table(upload: Any) -> pd.DataFrame:
     name = upload.name.lower()
-    raw = upload.getvalue()
+    data = upload.getvalue()
+    buf = io.BytesIO(data)
+
     if name.endswith(".csv"):
-        return pd.read_csv(io.BytesIO(raw))
-    if name.endswith((".xlsx", ".xlsm")):
-        return pd.read_excel(
-            io.BytesIO(raw),
-            engine="openpyxl",
-            header=_EXCEL_HEADER_ROW,
-            sheet_name=0,
-        )
-    if name.endswith(".xls"):
-        return pd.read_excel(io.BytesIO(raw), header=_EXCEL_HEADER_ROW, sheet_name=0)
-    st.error("Use CSV or Excel (.csv, .xlsx, .xlsm, .xls).")
-    st.stop()
+        frame = _read_csv_all_rows_headerless(buf)
+    elif name.endswith((".xlsx", ".xlsm")):
+        frame = pd.read_excel(buf, engine="openpyxl", header=None, sheet_name=0)
+    elif name.endswith(".xls"):
+        frame = pd.read_excel(buf, header=None, sheet_name=0)
+    else:
+        st.error("Use CSV or Excel (.csv, .xlsx, .xlsm, .xls).")
+        st.stop()
+
+    h = detect_header_row_index(frame)
+    return dataframe_with_detected_header(frame, h)
