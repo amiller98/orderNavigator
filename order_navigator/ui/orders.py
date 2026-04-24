@@ -8,6 +8,14 @@ import streamlit as st
 from order_navigator.parsing import parse_orders_from_raw
 
 
+def _default_visible_columns(columns: list[str]) -> list[str]:
+    """Prefer split description lines over one tall `Item description` cell when both exist."""
+    cols = list(columns)
+    if "Desc L1" in cols and "Item description" in cols:
+        return [c for c in cols if c != "Item description"]
+    return cols
+
+
 def _apply_text_filters(df: pd.DataFrame, q1: str, q2: str, q3: str) -> pd.DataFrame:
     out = df
     for q in (q1, q2, q3):
@@ -24,8 +32,10 @@ def _apply_text_filters(df: pd.DataFrame, q1: str, q2: str, q3: str) -> pd.DataF
 def render_orders() -> None:
     st.markdown("#### Orders")
     st.caption(
-        "Source: parsed from a **dirty** Excel export. Here: choose fields, sort, and quick text search. "
-        "The parse step is a stub until the backend is wired."
+        "Source: parsed from a **dirty** Excel export. "
+        "**Item description** is split into **Desc L1, L2, …** by newline so you can read it in columns. "
+        "Add the original **Item description** from *Visible columns* if you need the full block. "
+        "Heavier parsing (tolerance, isotope list) can build on this later."
     )
 
     raw = st.session_state.get("raw_orders_df")
@@ -45,8 +55,8 @@ def render_orders() -> None:
         show_cols = st.multiselect(
             "Visible columns",
             list(df.columns),
-            default=list(df.columns),
-            help="Show a subset of fields; table stays sortable in the viewer.",
+            default=_default_visible_columns(list(df.columns)),
+            help="Desc L* = lines from Item description. Re-add Item description to see the raw multiline cell.",
         )
     with c2:
         sort_col = st.selectbox("Sort by", list(df.columns), index=0)
