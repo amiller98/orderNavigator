@@ -15,3 +15,13 @@ streamlit run app.py
 ## Requirements
 
 - Python 3.10+
+
+## GitHub (create and link)
+
+One-time: `gh auth login` and complete the browser/device flow.
+
+From this folder:
+
+`gh repo create orderNavigator --public --source=. --remote=origin --push`
+
+If the name is taken, pick another (for example `order-navigator`) and use that in the command.
