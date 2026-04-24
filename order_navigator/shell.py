@@ -9,7 +9,7 @@ def inject_order_nav_shell_css() -> None:
         """
         <style>
         .stApp .stMain .block-container {
-            padding-top: 1.5rem !important;
+            padding-top: 2.25rem !important;
         }
         div[data-testid="stVerticalBlockBorderWrapper"] {
             overflow: visible !important;
@@ -28,8 +28,6 @@ def inject_order_nav_shell_css() -> None:
         [data-testid="stMarkdownContainer"]:has(.on-nav-sep) p {
             margin: 0 !important;
         }
-        .on-hero { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 0.1rem 0; }
-        .on-sub  { color: #94a3b8; font-size: 0.95rem; margin: 0 0 0.75rem 0; }
         </style>
         """,
         unsafe_allow_html=True,

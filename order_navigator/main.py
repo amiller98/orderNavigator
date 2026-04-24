@@ -24,14 +24,6 @@ def run() -> None:
     init_state()
     inject_order_nav_shell_css()
 
-    st.markdown(
-        """
-        <p class="on-hero">Order Navigator</p>
-        <p class="on-sub">Parse messy order exports, roll up isotope demand, and keep reference rules in one place.</p>
-        """,
-        unsafe_allow_html=True,
-    )
-
     with st.sidebar:
         st.header("Data source")
         upload = st.file_uploader(
