@@ -5,7 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 # Bump when `parse_orders_from_raw` output columns or logic change (invalidates cached parse).
-ORDERS_PARSE_VERSION = 2
+ORDERS_PARSE_VERSION = 4
 
 
 def init_state() -> None:
